@@ -1,52 +1,57 @@
+import getopt
+from datetime import datetime, date, time, timedelta
+from string import Template
 import re
 import httplib
-from string import Template
-from datetime import datetime, date, time, timedelta
-from optparse import OptionParser
+import sys
 
-parser = OptionParser()
-parser.add_option("--oracleVersion", dest="oracleVersion", type="string")
-parser.add_option("--alertFilePath",
-                  dest="alertFilePath", type="string")
-parser.add_option("--elasticHost",
-                  dest="elasticHost", type="string")
-parser.add_option("--elasticPort",
-                  dest="elasticPort", type="string")
-parser.add_option("--elasticIndex",
-                  dest="elasticIndex", type="string")
-(options, args) = parser.parse_args()
-
-required = ["oracleVersion", "alertFilePath",
-            "elasticHost", "elasticPort", "elasticIndex"]
-
-for r in required:
-    if options.__dict__[r] is None:
-        parser.error("parameter %s required" % r)
-
-oracleVersion = options['oracleVersion']
-alertFilepath = options['alertFilepath']
-elasticHost = options['elasticHost']
-elasticPort = options['elasticPort']
-elasticIndex = options['elasticIndex']
-
-# -- oracle 10g version
-if oracleVersion == "10":
-    regex = "^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\sCST\s[0-9]{4}$"
-else:
-    regex = "^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
-
-
-# STATE= {
-#     start:Flase
-# }
-
-
+oracleVersion = None
+alertFilePath = None
+elasticHost = None
+elasticPort = None
+elasticIndex = None
+alertTSRegex = None
 start = False
-
-logContainer = []
-
 processLines = 0
 validLines = 0
+
+
+def parserArgs(args):
+    global oracleVersion
+    global alertFilePath
+    global elasticHost
+    global elasticPort
+    global elasticIndex
+    global alertTSRegex
+    try:
+        opts, args = getopt.getopt(args,  "", [
+            "help", "oracleVersion=", "alertFilePath=", "elasticHost=",
+            "elasticPort=", "elasticIndex="])
+    except getopt.GetoptError:
+        # usage()
+        sys.exit(2)
+    for opt, value in opts:
+        if opt in ["--oracleVersion"]:
+            if value in ["9", "10", "11", "12"]:
+                oracleVersion = value
+        elif opt in ('--alertFilePath'):
+            alertFilePath = value
+        elif opt == '--elasticHost':
+            elasticHost = value
+        elif opt == '--elasticPort':
+            elasticPort = value
+        elif opt == '--elasticIndex':
+            elasticIndex = value
+
+        if None in [oracleVersion, alertFilePath,
+                    elasticHost, elasticPort, elasticIndex]:
+            print "arg: %s required." % "ss"
+
+        # -- oracle 10g version
+        if oracleVersion <= "10":
+            alertTSRegex = "^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\sCST\s[0-9]{4}$"
+        else:
+            alertTSRegex = "^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
 
 
 def elasticDocumentTemplate(timestamp, log):
@@ -99,13 +104,14 @@ def postElastic(logs):
 
 # if __name__ == "__main__":
 #     try:
-#     f = open('alert111.log', 'r')
+#         logContainer = []
+#         f = open('alert111.log', 'r')
 #         while True:
 #             line = f.readline()
 #             if not line:
 #                 break
 #             processLines += 1
-#             match = re.match(regex, line)
+#             match = re.match(alertTSRegex, line)
 #             if match:
 #                 start = True
 #             if match and start:
@@ -118,3 +124,15 @@ def postElastic(logs):
 #         print validLines
 #     finally:
 #         f.close()
+
+
+# def main():
+    # parser = create_parser()
+    # args = parser.parse_args()
+    # ping(args.tags, args.region, args.ami)
+
+
+if __name__ == '__main__':
+    parserArgs(sys.argv[1:])
+    # #
+    # print oracleVersion
