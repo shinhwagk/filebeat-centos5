@@ -1,0 +1,71 @@
+POST http://10.65.193.51:9200/testindex/_doc/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "@timestamp" : "2019-12-27T06:03:36.902Z",
+    "@metadata": {
+    "beat": "filebeat",
+    "type": "_doc",
+    "version": "7.5.1"
+  },
+    "message" : "Fri Dec 27 15:03:36 2019\nThread 1 advanced to log sequence 1211 (LGWR switch)\n  Current log# 1 seq# 1211 mem# 0: /u02/oradata/func3/redo01.log"
+}
+###
+# {
+#     "@timestamp": "2019-12-27T07:03:36.902Z",
+# 	"message":"Fri Dec 27 15:03:36 2019\nThread 1 advanced to log sequence 1211 (LGWR switch)\n  Current log# 1 seq# 1211 mem# 0: /u02/oradata/func3/redo01.log"
+	
+# }
+
+# query last 1 minutes
+###
+GET http://10.65.193.51:9200/filebeat-*/_search HTTP/1.1
+Content-Type: application/json
+
+{
+    "query": {
+        "range" : {
+            "timestamp" : {
+                "gt": "now -15m"
+            }
+        }
+    }
+}
+
+###
+POST http://10.65.193.51:9200/_sql?format=json HTTP/1.1
+Content-Type: application/json
+
+{
+    "query": "select \"message\" from \"filebeat-7.5.1-*\" where \"@timestamp\" >= NOW() - INTERVAL 10 MINUTE limit 2",
+    "index_include_frozen": true
+}
+
+# {
+#     "@timestamp": "2019-12-27T07:03:36.902Z",
+#     "@metadata": {
+#         "beat": "filebeat",
+#         "type": "_doc",
+#         "version": "7.5.1"
+#     },
+# 	"message":"Fri Dec 27 15:03:36 2019\nThread 1 advanced to log sequence 1211 (LGWR switch)\n  Current log# 1 seq# 1211 mem# 0: /u02/oradata/func3/redo01.log"
+	
+# }
+# PUT /customer?pretty
+
+###
+POST http://dbmonitor.weihui.com:3000/alertmanager/v1/alert HTTP/1.1
+Content-Type: application/json
+
+[
+  {
+    "labels": {
+       "alertname": "instance_down",
+       "instance": "example1"
+     },
+     "annotations": {
+        "info": "The instance example1 is down",
+        "summary": "instance example1 is down"
+      }
+  }
+]
