@@ -25,10 +25,17 @@ jobs:
         run: |
           eport=${{ job.services.elasticsearch.ports['9200'] }}
           python filebeat_oracle.py --oracleVersion 10 --alertFilePath "./test/10.log" --elasticHost 127.0.0.1 --elasticPort $eport --elasticIndex filebeat-oracle
-          sleep 10
       - name: Test Elasticsearch Index Document Number
         run: |
           eport=${{ job.services.elasticsearch.ports['9200'] }}
-          curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${eport}/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}'
-          cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${eport}/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}' | wc -l)
-          echo $cnt
+          for i in `seq 1 60`
+          do
+            cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${eport}/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}' | wc -l)
+            if [[ "$cnt" == "34" ]]; then
+              exit 0
+            else
+              echo "document count: ${cnt}. retry: ${i}"
+              sleep 1
+            fi
+            exit 1
+          done
