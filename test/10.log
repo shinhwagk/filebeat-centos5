@@ -1,0 +1,42 @@
+Fri Nov 24 22:01:56 CST 2017
+Thread 1 advanced to log sequence 14639 (LGWR switch)
+  Current log# 2 seq# 14639 mem# 0: /u01/oradata/whpay/redo02.log
+Sat Nov 25 01:36:24 CST 2017
+The value (30) of MAXTRANS parameter ignored.
+kupprdp: master process DM00 started with pid=662, OS id=29862
+         to execute - SYS.KUPM$MCP.MAIN('SYS_EXPORT_FULL_18', 'SYS', 'KUPC$C_1_20171125013624', 'KUPC$S_1_20171125013624', 0);
+kupprdp: worker process DW01 started with worker id=1, pid=216, OS id=29864
+         to execute - SYS.KUPW$WORKER.MAIN('SYS_EXPORT_FULL_18', 'SYS');
+Sat Nov 25 04:37:04 CST 2017
+Thread 1 advanced to log sequence 14640 (LGWR switch)
+  Current log# 1 seq# 14640 mem# 0: /u01/oradata/whpay/redo01.log
+Sat Nov 25 16:57:01 CST 2017
+Thread 1 advanced to log sequence 14641 (LGWR switch)
+  Current log# 3 seq# 14641 mem# 0: /u01/oradata/whpay/redo03.log
+Sun Nov 26 01:36:19 CST 2017
+The value (30) of MAXTRANS parameter ignored.
+kupprdp: master process DM00 started with pid=663, OS id=28705
+         to execute - SYS.KUPM$MCP.MAIN('SYS_EXPORT_FULL_18', 'SYS', 'KUPC$C_1_20171126013619', 'KUPC$S_1_20171126013619', 0);
+kupprdp: worker process DW01 started with worker id=1, pid=664, OS id=28707
+         to execute - SYS.KUPW$WORKER.MAIN('SYS_EXPORT_FULL_18', 'SYS');
+Sun Nov 26 02:45:04 CST 2017
+Thread 1 advanced to log sequence 14642 (LGWR switch)
+  Current log# 4 seq# 14642 mem# 0: /u01/oradata/whpay/redo04.log
+Sun Nov 26 16:35:01 CST 2017
+Thread 1 advanced to log sequence 14643 (LGWR switch)
+  Current log# 2 seq# 14643 mem# 0: /u01/oradata/whpay/redo02.log
+Mon Nov 27 01:36:21 CST 2017
+The value (30) of MAXTRANS parameter ignored.
+kupprdp: master process DM00 started with pid=645, OS id=24903
+         to execute - SYS.KUPM$MCP.MAIN('SYS_EXPORT_FULL_18', 'SYS', 'KUPC$C_1_20171127013621', 'KUPC$S_1_20171127013621', 0);
+kupprdp: worker process DW01 started with worker id=1, pid=666, OS id=24905
+         to execute - SYS.KUPW$WORKER.MAIN('SYS_EXPORT_FULL_18', 'SYS');
+Mon Nov 27 02:35:27 CST 2017
+Thread 1 advanced to log sequence 14644 (LGWR switch)
+  Current log# 1 seq# 14644 mem# 0: /u01/oradata/whpay/redo01.log
+Thu Jul 11 01:36:04 CST 2019
+The value (30) of MAXTRANS parameter ignored.
+kupprdp: master process DM00 started with pid=243, OS id=28297
+         to execute - SYS.KUPM$MCP.MAIN('SYS_EXPORT_FULL_18', 'SYS', 'KUPC$C_1_20190711013605', 'KUPC$S_1_20190711013605', 0);
+kupprdp: worker process DW01 started with worker id=1, pid=365, OS id=28309
+         to execute - SYS.KUPW$WORKER.MAIN('SYS_EXPORT_FULL_18', 'SYS');
