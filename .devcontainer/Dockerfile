@@ -1,3 +1,3 @@
 FROM python:2
 
-RUN python -m pip install pylint rope
+RUN python -m pip install pylint rope autopep8

@@ -69,3 +69,6 @@ Content-Type: application/json
       }
   }
 ]
+
+###
+DELETE http://elastic:9200/oracle_alert_log HTTP/1.1

@@ -4,7 +4,5 @@
     "python.linting.banditEnabled": false,
     "editor.formatOnSave": true,
     "editor.insertSpaces": true,
-    "python.linting.pylintArgs": [
-        "--max-line-length=248"
-    ]
+    "editor.tabSize": 2
 }

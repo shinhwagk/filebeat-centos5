@@ -1,28 +1,29 @@
 import getopt
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, timedelta
 from string import Template
 import re
 import httplib
 import sys
+import os
 
-oracleVersion = None
-alertFilePath = None
-elasticHost = None
-elasticPort = None
-elasticIndex = None
-alertTSRegex = None
-start = False
-processLines = 0
-validLines = 0
+ORACLE_VERSION = None
+ALERT_FILE_PATH = None
+ELASTIC_HOST = None
+ELASTIC_PORT = None
+ELASTIC_INDEX = "orclalertlog"
+ALERT_TS_REGEX = None
+
+# PROCESS_LINES = 0
+# VALID_LINES = 0
 
 
-def parserArgs(args):
-    global oracleVersion
-    global alertFilePath
-    global elasticHost
-    global elasticPort
-    global elasticIndex
-    global alertTSRegex
+def parser_args(args):
+    global ORACLE_VERSION
+    global ALERT_FILE_PATH
+    global ELASTIC_HOST
+    global ELASTIC_PORT
+    global ELASTIC_INDEX
+
     try:
         opts, args = getopt.getopt(args,  "", [
             "help", "oracleVersion=", "alertFilePath=", "elasticHost=",
@@ -33,106 +34,124 @@ def parserArgs(args):
     for opt, value in opts:
         if opt in ["--oracleVersion"]:
             if value in ["9", "10", "11", "12"]:
-                oracleVersion = value
+                ORACLE_VERSION = value
         elif opt in ('--alertFilePath'):
-            alertFilePath = value
+            ALERT_FILE_PATH = value
         elif opt == '--elasticHost':
-            elasticHost = value
+            ELASTIC_HOST = value
         elif opt == '--elasticPort':
-            elasticPort = value
+            ELASTIC_PORT = value
         elif opt == '--elasticIndex':
-            elasticIndex = value
+            ELASTIC_INDEX = value
 
-        if None in [oracleVersion, alertFilePath,
-                    elasticHost, elasticPort, elasticIndex]:
-            print "arg: %s required." % "ss"
+    if None in [ORACLE_VERSION, ALERT_FILE_PATH,
+                ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX]:
+        print ELASTIC_PORT
+        print "arg: %s required." % "ss"
 
-        # -- oracle 10g version
-        if oracleVersion <= "10":
-            alertTSRegex = "^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\sCST\s[0-9]{4}$"
-        else:
-            alertTSRegex = "^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
+
+def init_global_variables():
+    global ALERT_TS_REGEX
+    if ORACLE_VERSION <= "10":
+        ALERT_TS_REGEX = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\sCST\s[0-9]{4}$"
+    else:
+        ALERT_TS_REGEX = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
 
 
 def elasticDocumentTemplate(timestamp, log):
-    t = Template(
-        '{"@timestamp":"${timestamp}","message":"${log}","log":{"flags":["multiline"],"file":"${filePath}"}}')
-    return t.safe_substitute(timestamp=timestamp, log=log, filePath=alertFilepath)
+    _t = Template(
+        '{"@timestamp":"${timestamp}","message":"${log}","log":{"flags":["multiline"],"file":"${filePath}"},"oracle":{"version":"${version}"}}')
+    return _t.safe_substitute(timestamp=timestamp, log=log, filePath=ALERT_FILE_PATH, version=ORACLE_VERSION)
 
 
 def elasticTimestampTemplate(y, m, d, h, mi, ss):
-    d = date(y, m, d)
-    t = time(h, mi, ss)
-    ts = datetime.combine(d, t) + timedelta(hours=-8)
-    return ts.strftime("%Y%m%dT%H:%M:%S.000Z")
+    return (datetime(y, m, d, h, mi, ss) + timedelta(hours=-8)).strftime("%Y%m%dT%H:%M:%S.000Z")
 
 
-def httpPost(body):
+def httpPost(host, port, index, body):
     headers = {"Content-type": "application/json"}
-    conn = httplib.HTTPConnection(elasticHost, elasticPort)
-    urlPath = "/%s/_doc" % (elasticIndex)
-    conn.request("POST", urlPath, body, headers)
+    conn = httplib.HTTPConnection(host, port)
+    url_path = "/%s/_doc" % (index)
+    conn.request("POST", url_path, body, headers)
     response = conn.getresponse()
-    print response.status
+    if response.status != 201:
+        print response.read()
     conn.close()
 
 
-def abbrMonthToNumMonth(strmon):
+def abbr_month_to_num_month(strmon):
     mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul',
            'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].index(strmon) + 1
     return mon
 
 
-def logTimestampToElasticTimestamp(timestamp):
-    mon = abbrMonthToNumMonth(timestamp[4:7])
+def logTimestampToSingleDateNumbers(timestamp):
+    mon = abbr_month_to_num_month(timestamp[4:7])
     day = timestamp[8:10]
     hour = timestamp[11:13]
     minu = timestamp[14:16]
     sec = timestamp[17:19]
-    if oracleVersion == '10':
+    if ORACLE_VERSION == '10':
         year = timestamp[24:28]
     else:
         year = timestamp[20:24]
-    return elasticTimestampTemplate(int(year), mon, int(day), int(hour), int(minu), int(sec))
+    return int(year), mon, int(day), int(hour), int(minu), int(sec)
+
+
+def logTimestampToElasticIndexName(esidx, year, month, day):
+    return "%s-%s.%s.%s" % (esidx, year, month, day)
 
 
 def postElastic(logs):
-    timestamp = logTimestampToElasticTimestamp(logs[0])
-    body = elasticDocumentTemplate(timestamp, '\\n'.join(logs[1:]))
-    httpPost(body)
+    year, mon, day, hour, minu, sec = logTimestampToSingleDateNumbers(logs[0])
+    ests = elasticTimestampTemplate(year, mon, day, hour, minu, sec)
+    body = elasticDocumentTemplate(ests, r'\n'.join(logs[1:]))
+    esidx = logTimestampToElasticIndexName(ELASTIC_INDEX, year, mon, day)
+    httpPost(ELASTIC_HOST, ELASTIC_PORT, esidx, body)
 
 
-# if __name__ == "__main__":
-#     try:
-#         logContainer = []
-#         f = open('alert111.log', 'r')
-#         while True:
-#             line = f.readline()
-#             if not line:
-#                 break
-#             processLines += 1
-#             match = re.match(alertTSRegex, line)
-#             if match:
-#                 start = True
-#             if match and start:
-#                 if len(logContainer) >= 1:
-#                     postElastic(logContainer)
-#                     validLines = processLines - 1
-#                 logContainer = []
-#             if start:
-#                 logContainer.append(line)
-#         print validLines
-#     finally:
-#         f.close()
+def main(args):
+    parser_args(args)
+    init_global_variables()
 
+    _process_lines = 0
+    _valid_lines = 0
+    _start = False
+    _log_container = []
+    _f = None
 
-# def main():
-    # parser = create_parser()
-    # args = parser.parse_args()
-    # ping(args.tags, args.region, args.ami)
+    try:
+        _f = open(ALERT_FILE_PATH, 'r')
+        while True:
+            line = _f.readline()
+            if not line:
+                if len(_log_container) >= 1:
+                    postElastic(_log_container)
+                    _valid_lines = _process_lines
+                break
+            _process_lines += 1
+            line = line.strip('\n')
+            match = re.match(ALERT_TS_REGEX, line)
+            if match:
+                _start = True
+            if match and _start:
+                if len(_log_container) >= 1:
+                    postElastic(_log_container)
+                    _valid_lines = _process_lines - 1
+                _log_container = []
+            if _start:
+                _log_container.append(line)
+    finally:
+        if _f is not None:
+            _f.close()
+    if _valid_lines >= 1:
+        command = "sed -i '1,%sd' %s" % (_valid_lines, ALERT_FILE_PATH)
+        ext = os.system(command)
+        if ext <> 0:
+            print "delete line 1 - %s, exit code %s" % (_valid_lines, ext)
 
 
 if __name__ == '__main__':
-    parserArgs(sys.argv[1:])
+    main(sys.argv[1:])
     # #
     # print oracleVersion
