@@ -1,0 +1,29 @@
+name: Python application
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      elasticsearch:
+        image: elasticsearch:7.5.1
+        env:
+          discovery.type: single-node
+        ports:
+        - 9200
+        options: --health-cmd="curl http://127.0.0.1:9200" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '2.x'
+          architecture: x64
+      - name: Test filebeat-oracle
+        run: python filebeat_oracle_test.py
+      - name: Post Test Log To Elasticsearch
+        run: |
+          eport=${{ job.services.elasticsearch.ports['9200'] }}
+          python filebeat_oracle.py --oracleVersion 10 --alertFilePath "./test/10.log" --elasticHost 127.0.0.1 --elasticPort $eport --elasticIndex filebeat-oracle
+      - name: Test Elasticsearch Index Document Number
+        run: curl -XPOST -H"Content-Type: application/json" http://10.65.193.51:9200/_sql?format=txt -d '{"query": "select \"@timestamp\",\"message\" from \"filebeat-7.5.1-*\" where \"@timestamp\" >='2019-12-26T15:03:36.902Z' limit 1"}'
