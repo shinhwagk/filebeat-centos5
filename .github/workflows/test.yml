@@ -31,12 +31,8 @@ jobs:
           for i in `seq 1 60`
           do
             cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${eport}/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}' | wc -l)
-            if [[ "$cnt" == "34" ]]; then
-              exit 0
-            else
-              echo "document count: ${cnt}. retry: ${i}"
-              sleep 1
-              continue
-            fi
-            exit 1
+            [[ "$cnt" == "34" ]] && exit 0
+            echo "document count: ${cnt}. retry: ${i}"
+            sleep 1
           done
+          exit 1            
