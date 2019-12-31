@@ -36,6 +36,7 @@ jobs:
             else
               echo "document count: ${cnt}. retry: ${i}"
               sleep 1
+              continue
             fi
             exit 1
           done
