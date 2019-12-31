@@ -1,4 +1,4 @@
-name: filebeat-oracle
+name: test filebeat-oracle
 on: [push]
 
 jobs:
@@ -27,4 +27,4 @@ jobs:
           python filebeat_oracle.py --oracleVersion 10 --alertFilePath "./test/10.log" --elasticHost 127.0.0.1 --elasticPort $eport --elasticIndex filebeat-oracle
       - name: Test Elasticsearch Index Document Number
         run: |
-          curl -XPOST -H"Content-Type: application/json" http://10.65.193.51:9200/_sql?format=txt -d '{"query": "select \"@timestamp\",\"message\" from \"filebeat-7.5.1-*\" where \"@timestamp\" >='2019-12-26T15:03:36.902Z' limit 1"}'
+          curl -XPOST -H"Content-Type: application/json" http://10.65.193.51:9200/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}'
