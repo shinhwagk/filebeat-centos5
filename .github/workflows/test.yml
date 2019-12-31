@@ -30,7 +30,7 @@ jobs:
           for i in `seq 1 60`
           do
             cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${eport}/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}' | wc -l)
-            [[ "$cnt" == "34" ]] && echo "document count: ${cnt}." && exit 0
+            [[ "$cnt" == "34" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
             echo "document count: ${cnt}. retry: ${i}."
             sleep 1
           done
