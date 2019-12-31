@@ -28,5 +28,6 @@ jobs:
       - name: Test Elasticsearch Index Document Number
         run: |
           eport=${{ job.services.elasticsearch.ports['9200'] }}
+          curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${eport}/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}'
           cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${eport}/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}' | wc -l)
           echo $cnt
