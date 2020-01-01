@@ -1,20 +1,6 @@
 import filebeat_oracle
 import unittest
 
-# message = """aaa
-# bbb"""
-
-# message = message.replace('\n', '\\n')
-
-# body = agent.elasticDocumentTemplate("2019-12-30T08:03:36.902Z",   message)
-# print body
-
-# agent.httpPost(body)
-
-
-# x = agent.logTimestampToElasticTimestamp("Mon Feb 09 16:28:55 CST 2019")
-# print x
-
 
 class ParametrizedTestCase(unittest.TestCase):
     def __init__(self, methodName='runTest', args=None):
@@ -33,12 +19,13 @@ class ParametrizedTestCase(unittest.TestCase):
 class TestOracleAlertLogToElastic(ParametrizedTestCase):
 
     def setUp(self):
-        lib.parser_args(self.args)
+        filebeat_oracle.ORACLE_VERSION =
 
     def testlogTimestampToElasticTimestamp(self):
-        year, mon, day, hour, minu, sec = lib.logTimestampToSingleDateNumbers(
+        year, mon, day, hour, minu, sec = filebeat_oracle.logTimestampToSingleDateNumbers(
             "Fri Jan 02 08:00:00 2019")
-        ests = lib.elasticTimestampTemplate(year, mon, day, hour, minu, sec)
+        ests = filebeat_oracle.elasticTimestampTemplate(
+            year, mon, day, hour, minu, sec)
         self.assertEqual(ests, '20190102T00:00:00.000Z')
 
         # def testElasticDocumentTemplate(self):

@@ -4,11 +4,7 @@
 	"service": "app",
 	"workspaceFolder": "/workspace",
 	"settings": {
-		"terminal.integrated.shell.linux": "/bin/bash",
-		"python.pythonPath": "/usr/local/bin/python",
-		"python.linting.enabled": true,
-		"python.linting.pylintEnabled": true,
-		"python.linting.pylintPath": "/usr/local/bin/pylint"
+		"terminal.integrated.shell.linux": "/bin/bash"
 	},
 	"extensions": [
 		"ms-python.python",

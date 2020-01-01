@@ -20,7 +20,7 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     volumes:
-      - ..:/workspace:cached
+      - ..:/workspace
     command: sleep infinity
     links:
       - elastic
