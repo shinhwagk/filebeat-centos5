@@ -18,8 +18,8 @@ jobs:
         with:
           python-version: '2.x'
           architecture: x64
-      - name: Test filebeat-oracle
-        run: python filebeat_oracle_test.py
+      # - name: Test filebeat-oracle
+      #   run: python filebeat_oracle_test.py
       - name: Post Test Log To Elasticsearch
         run: |
           eport=${{ job.services.elasticsearch.ports['9200'] }}
