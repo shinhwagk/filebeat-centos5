@@ -8,5 +8,6 @@
 ```sh
 curl -XDELETE http://ELASTIC:9200/oracle_alert_log
 
-python filebeat_oracle.py --oracleVersion 10 --alertFilePath ./test/10.log --elasticHost 127.0.0.1 --elasticPort 9200 
+cp test/10.log test/10.1.log
+python filebeat_oracle.py --oracleVersion 10 --alertFilePath ./test/10.log --elasticHost elastic --elasticPort 9200 
 ```
