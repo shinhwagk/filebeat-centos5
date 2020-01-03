@@ -96,12 +96,12 @@ def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, fil
         _ess(esidx, esDoc)
     return post
 
-
-def sedCmdDelFileLines(file, line):
-    command = "sed -i '1,{}d' {}".format(line, file)
-    ext = os.system(command)
-    if ext != 0:
-        print("delete line 1 - {}, exit code {}".format(line, ext))
+# external shell opertaions
+# def sedCmdDelFileLines(file, line):
+#     command = "sed -i '1,{}d' {}".format(line, file)
+#     ext = os.system(command)
+#     if ext != 0:
+#         print("delete line 1 - {}, exit code {}".format(line, ext))
 
 
 def main(args):
@@ -142,7 +142,7 @@ def main(args):
         if _f is not None:
             _f.close()
     if _valid_lines >= 1:
-        sedCmdDelFileLines(ALERT_FILE_PATH, _valid_lines)
+        print(_valid_lines)
 
 
 if __name__ == '__main__':
