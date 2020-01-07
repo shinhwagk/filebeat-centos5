@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.7, 3.8]
     services:
       elasticsearch:
         image: elasticsearch:7.5.1
@@ -34,7 +34,7 @@ jobs:
           for i in `seq 1 60`
           do
             cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${esport}/_sql?format=txt -d '{"query": "select count(*) from \"filebeat-oracle-*\" WHERE \"oracle.version\" = 10 "}' | tail -n 1)
-            [[ "$cnt" == "10" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
+            [[ "${cnt}" == "10" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
             echo "document count: ${cnt}. retry: ${i}."
             sleep 1
           done
