@@ -26,11 +26,11 @@ jobs:
           python filebeat_oracle.py --oracleVersion 10 --alertFilePath "./test/10.log" --elasticHost 127.0.0.1 --elasticPort $eport --elasticIndex filebeat-oracle
       - name: Test Elasticsearch Index Document Number
         run: |
-          eport=${{ job.services.elasticsearch.ports['9200'] }}
+          esport=${{ job.services.elasticsearch.ports['9200'] }}
           # for i in `seq 1 60`
           # do
-          #   cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${eport}/_sql?format=txt -d '{"query": "select \"message\" from \"filebeat-oracle-*\""}' | wc -l)
-          #   [[ "$cnt" == "34" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
+          #   cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${esport}/_sql?format=txt -d '{"query": "select count(*) from \"filebeat-oracle-*\""}' | tail -n 1)
+          #   [[ "$cnt" == "10" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
           #   echo "document count: ${cnt}. retry: ${i}."
           #   sleep 1
           # done
