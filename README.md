@@ -1,4 +1,6 @@
 # filebeat-oracle
+https://pypi.org/project/filebeat-oracle/#files
+
 
 ```
 /var/lib/dbus/machine-id
