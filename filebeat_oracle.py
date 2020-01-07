@@ -13,11 +13,12 @@ def parser_args(args):
     ELASTIC_HOST = None
     ELASTIC_PORT = None
     ELASTIC_INDEX = "filebeat-oracle"
+    ELASTIC_INDEX_FORMAT = r"%Y.%m.%d"
 
     try:
         opts, args = getopt.getopt(args,  "", [
             "help", "oracleVersion=", "alertFilePath=", "elasticHost=",
-            "elasticPort=", "elasticIndex="])
+            "elasticPort=", "elasticIndex=", "elasticIndexDateFormat="])
     except getopt.GetoptError:
         # usage()
         sys.exit(2)
@@ -33,6 +34,8 @@ def parser_args(args):
             ELASTIC_PORT = value
         elif opt == '--elasticIndex':
             ELASTIC_INDEX = value
+        elif opt == '--elasticIndexDateFormat':
+            ELASTIC_INDEX_FORMAT = value
 
     ALERT_TS_REGEX = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
 
@@ -44,7 +47,7 @@ def parser_args(args):
         print("arg: %s required." % "ss")
         sys.exit(2)
 
-    return ORACLE_VERSION, ALERT_FILE_PATH, ALERT_TS_REGEX, ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX
+    return ORACLE_VERSION, ALERT_FILE_PATH, ALERT_TS_REGEX, ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX, ELASTIC_INDEX_FORMAT
 
 
 def ESServicePost(elastic_host, elastic_port):
@@ -67,8 +70,8 @@ def logTSToDatetime(oracle_version, timestamp):
     return datetime.strptime(timestamp, _format)
 
 
-def logTSMapEsidx(esidx, d):
-    return "{}-{}.{}.{}".format(esidx, d.year, d.month, d.day)
+def logTSMapEsidx(esidx, d, fmt):
+    return "{}-{}".format(esidx, d.strftime(fmt))
 
 
 def esDocTSTemplate(logdt):
@@ -85,12 +88,13 @@ def esDocTemplate(logdt, message, file_path, oracle_version):
     return json.dumps(document)
 
 
-def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, file_path):
+def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, file_path, ELASTIC_INDEX_FORMAT):
     _ess = ESServicePost(elastic_host, elastic_port)
 
     def post(log):
         logts = logTSToDatetime(oracle_version, log[0])
-        esidx = logTSMapEsidx(elastic_prefix_index, logts)
+        esidx = logTSMapEsidx(elastic_prefix_index,
+                              logts, ELASTIC_INDEX_FORMAT)
         esDoc = esDocTemplate(logts,
                               r'\n'.join(log[1:]), file_path, oracle_version)
         _ess(esidx, esDoc)
@@ -105,11 +109,11 @@ def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, fil
 
 
 def main(args):
-    ORACLE_VERSION, ALERT_FILE_PATH, ALERT_TS_REGEX, ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX = parser_args(
+    ORACLE_VERSION, ALERT_FILE_PATH, ALERT_TS_REGEX, ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX, ELASTIC_INDEX_FORMAT = parser_args(
         args)
 
     _ess_client = postes(ELASTIC_HOST, ELASTIC_PORT,
-                         ELASTIC_INDEX, ORACLE_VERSION, ALERT_FILE_PATH)
+                         ELASTIC_INDEX, ORACLE_VERSION, ALERT_FILE_PATH, ELASTIC_INDEX_FORMAT)
 
     _process_lines = 0
     _valid_lines = 0
