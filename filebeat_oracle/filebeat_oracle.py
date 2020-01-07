@@ -92,7 +92,7 @@ def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, fil
         esidx = logTSMapEsidx(elastic_prefix_index,
                               _logutcts, ELASTIC_INDEX_FORMAT)
         esDoc = esDocTemplate(_logutcts.isoformat(),
-                              r'\\n'.join(log[1:]), file_path, oracle_version)
+                              '\n'.join(log[1:]), file_path, oracle_version)
         _ess(esidx, esDoc)
     return post
 
