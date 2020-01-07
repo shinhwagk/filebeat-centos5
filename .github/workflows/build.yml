@@ -14,7 +14,7 @@ jobs:
         env:
           discovery.type: single-node
         ports:
-        - 9200
+          - 9200
         options: --health-cmd="curl http://127.0.0.1:9200" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - uses: actions/checkout@v1
@@ -31,13 +31,13 @@ jobs:
       - name: Test Elasticsearch Index Document Number
         run: |
           esport=${{ job.services.elasticsearch.ports['9200'] }}
-          # for i in `seq 1 60`
-          # do
-          #   cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${esport}/_sql?format=txt -d '{"query": "select count(*) from \"filebeat-oracle-*\""}' | tail -n 1)
-          #   [[ "$cnt" == "10" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
-          #   echo "document count: ${cnt}. retry: ${i}."
-          #   sleep 1
-          # done
+          for i in `seq 1 60`
+          do
+            cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${esport}/_sql?format=txt -d '{"query": "select count(*) from \"filebeat-oracle-*\""}' | tail -n 1)
+            [[ "$cnt" == "10" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
+            echo "document count: ${cnt}. retry: ${i}."
+            sleep 1
+          done
           exit 1
       - run: pip install wheel
       - run: python setup.py bdist_wheel
