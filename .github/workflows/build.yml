@@ -26,8 +26,8 @@ jobs:
       #   run: python filebeat_oracle_test.py
       - name: Post Test Log To Elasticsearch
         run: |
-          eport=${{ job.services.elasticsearch.ports['9200'] }}
-          python filebeat_oracle.py --oracleVersion 10 --alertFilePath "./test/10.log" --elasticHost 127.0.0.1 --elasticPort $eport --elasticIndex filebeat-oracle
+          esport=${{ job.services.elasticsearch.ports['9200'] }}
+          python filebeat_oracle.py --oracleVersion 10 --alertFilePath "./test/10.log" --elasticHost 127.0.0.1 --elasticPort $esport --elasticIndex filebeat-oracle
       - name: Test Elasticsearch Index Document Number
         run: |
           esport=${{ job.services.elasticsearch.ports['9200'] }}
