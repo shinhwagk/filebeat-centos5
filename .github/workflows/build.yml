@@ -1,4 +1,4 @@
-name: Test filebeat-oracle
+name: Build filebeat-oracle
 on: [push]
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
-          python-version: '2.x'
+          python-version: '3.x'
           architecture: x64
       # - name: Test filebeat-oracle
       #   run: python filebeat_oracle_test.py
@@ -35,3 +35,11 @@ jobs:
           #   sleep 1
           # done
           exit 1
+      - run: pip install wheel
+      - run: python setup.py bdist_wheel
+      - name: Publish package
+        if: github.event_name == 'push'
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: ${{ secrets.pypi_username }}
+          password: ${{ secrets.pypi_password }}

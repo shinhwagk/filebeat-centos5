@@ -1,10 +1,10 @@
 import getopt
-from datetime import datetime, timedelta
-from string import Template
+from datetime import datetime, timedelta, timezone
 import re
-import httplib
 import sys
 import os
+import json
+import http.client as httpClient
 
 
 def parser_args(args):
@@ -13,18 +13,19 @@ def parser_args(args):
     ELASTIC_HOST = None
     ELASTIC_PORT = None
     ELASTIC_INDEX = "filebeat-oracle"
-    ALERT_TS_REGEX = None
+    ELASTIC_INDEX_FORMAT = r"%Y.%m.%d"
+
     try:
         opts, args = getopt.getopt(args,  "", [
             "help", "oracleVersion=", "alertFilePath=", "elasticHost=",
-            "elasticPort=", "elasticIndex="])
+            "elasticPort=", "elasticIndex=", "elasticIndexDateFormat="])
     except getopt.GetoptError:
         # usage()
         sys.exit(2)
     for opt, value in opts:
         if opt in ["--oracleVersion"]:
             if value in ["9", "10", "11", "12"]:
-                ORACLE_VERSION = value
+                ORACLE_VERSION = int(value)
         elif opt in ('--alertFilePath'):
             ALERT_FILE_PATH = value
         elif opt == '--elasticHost':
@@ -33,86 +34,82 @@ def parser_args(args):
             ELASTIC_PORT = value
         elif opt == '--elasticIndex':
             ELASTIC_INDEX = value
+        elif opt == '--elasticIndexDateFormat':
+            ELASTIC_INDEX_FORMAT = value
 
-    if ORACLE_VERSION in ["9", "10"]:
+    ALERT_TS_REGEX = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
+
+    if ORACLE_VERSION in [9, 10]:
         ALERT_TS_REGEX = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\sCST\s[0-9]{4}$"
-    else:
-        ALERT_TS_REGEX = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
 
     if None in [ORACLE_VERSION, ALERT_FILE_PATH,
                 ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX]:
-        print ELASTIC_PORT
-        print "arg: %s required." % "ss"
+        print("arg: %s required." % "ss")
         sys.exit(2)
 
-    return ORACLE_VERSION, ALERT_FILE_PATH, ALERT_TS_REGEX, ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX
+    return ORACLE_VERSION, ALERT_FILE_PATH, ALERT_TS_REGEX, ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX, ELASTIC_INDEX_FORMAT
 
 
-def ESServicePost(ELASTIC_HOST, ELASTIC_PORT):
-    def post(esidx, doc):
+def ESServicePost(elastic_host, elastic_port):
+    def post(esidx, esdoc):
         headers = {"Content-type": "application/json"}
-        conn = httplib.HTTPConnection(ELASTIC_HOST, ELASTIC_PORT)
-        url_path = "/%s/_doc" % (esidx)
-        conn.request("POST", url_path, doc, headers)
+        conn = httpClient.HTTPConnection(elastic_host, elastic_port)
+        url_path = "/{}/_doc".format(esidx)
+        conn.request("POST", url_path, esdoc, headers)
         response = conn.getresponse()
         if response.status != 201:
-            print response.read()
+            print(response.read())
         conn.close()
     return post
 
 
-def abbr_month_to_num_month(smon):
-    return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul',
-            'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].index(smon) + 1
+def logTSToDatetime(oracle_version, timestamp):
+    _format = '%a %b %d %H:%M:%S %Y'
+    if oracle_version in [9, 10]:
+        _format = '%a %b %d %H:%M:%S CST %Y'
+    return datetime.strptime(timestamp, _format).astimezone(timezone.utc)
 
 
-def parseLogTSToSingleDateNums(oracle_version, timestamp):
-    mon = abbr_month_to_num_month(timestamp[4:7])
-    day = timestamp[8:10]
-    hour = timestamp[11:13]
-    minu = timestamp[14:16]
-    sec = timestamp[17:19]
-    if oracle_version in ['9', '10']:
-        year = timestamp[24:28]
-    else:
-        year = timestamp[20:24]
-    return int(year), mon, int(day), int(hour), int(minu), int(sec)
+def logTSMapEsidx(esidx, d, fmt):
+    return "{}-{}".format(esidx, d.strftime(fmt))
 
 
-def logTSMapEsidx(esidx, year, month, day):
-    return "%s-%s.%s.%s" % (esidx, year, month, day)
+def esDocTemplate(utcdt, message, file_path, oracle_version):
+    document = {
+        "@timestamp": utcdt,
+        "message": message,
+        "log": {"flags": ["multiline"], "file": file_path},
+        "oracle": {"version": oracle_version}
+    }
+    return json.dumps(document)
 
 
-def esDocTSTemplate(y, m, d, h, mi, ss):
-    return (datetime(y, m, d, h, mi, ss) + timedelta(hours=-8)).strftime("%Y%m%dT%H:%M:%S.000Z")
-
-
-def esDocTemplate(timestamp, log, file_path, oracle_version):
-    _t = Template(
-        '{"@timestamp":"${timestamp}","message":"${log}","log":{"flags":["multiline"],"file":"${filePath}"},"oracle":{"version":"${version}"}}')
-    return _t.safe_substitute(timestamp=timestamp, log=log, filePath=file_path, version=oracle_version)
-
-
-def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, file_path):
+def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, file_path, ELASTIC_INDEX_FORMAT):
     _ess = ESServicePost(elastic_host, elastic_port)
 
     def post(log):
-        year, mon, day, hour, minu, sec = parseLogTSToSingleDateNums(
-            oracle_version, log[0])
-        esidx = logTSMapEsidx(elastic_prefix_index, year, mon, day)
-        esDocTimestamp = esDocTSTemplate(year, mon, day, hour, minu, sec)
-        esDoc = esDocTemplate(
-            esDocTimestamp, r'\n'.join(log[1:]), file_path, oracle_version)
+        _logutcts = logTSToDatetime(oracle_version, log[0])
+        esidx = logTSMapEsidx(elastic_prefix_index,
+                              _logutcts, ELASTIC_INDEX_FORMAT)
+        esDoc = esDocTemplate(_logutcts.isoformat(),
+                              r'\n'.join(log[1:]), file_path, oracle_version)
         _ess(esidx, esDoc)
     return post
 
+# external shell opertaions
+# def sedCmdDelFileLines(file, line):
+#     command = "sed -i '1,{}d' {}".format(line, file)
+#     ext = os.system(command)
+#     if ext != 0:
+#         print("delete line 1 - {}, exit code {}".format(line, ext))
+
 
 def main(args):
-    ORACLE_VERSION, ALERT_FILE_PATH, ALERT_TS_REGEX, ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX = parser_args(
+    ORACLE_VERSION, ALERT_FILE_PATH, ALERT_TS_REGEX, ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX, ELASTIC_INDEX_FORMAT = parser_args(
         args)
 
     _ess_client = postes(ELASTIC_HOST, ELASTIC_PORT,
-                         ELASTIC_INDEX, ORACLE_VERSION, ALERT_FILE_PATH)
+                         ELASTIC_INDEX, ORACLE_VERSION, ALERT_FILE_PATH, ELASTIC_INDEX_FORMAT)
 
     _process_lines = 0
     _valid_lines = 0
@@ -145,10 +142,7 @@ def main(args):
         if _f is not None:
             _f.close()
     if _valid_lines >= 1:
-        command = "sed -i '1,%sd' %s" % (_valid_lines, ALERT_FILE_PATH)
-        ext = os.system(command)
-        if ext <> 0:
-            print "delete line 1 - %s, exit code %s" % (_valid_lines, ext)
+        print(_valid_lines)
 
 
 if __name__ == '__main__':
