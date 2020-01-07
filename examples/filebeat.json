@@ -1,0 +1,62 @@
+{
+  "_index": "filebeat-7.5.1-2020.01.07-000001",
+  "_type": "_doc",
+  "_id": "lWpgf28BhPDEtQKn25pl",
+  "_version": 1,
+  "_score": null,
+  "_source": {
+    "@timestamp": "2020-01-07T09:40:50.081Z",
+    "log": {
+      "file": {
+        "path": "/u01/app/oracle/diag/rdbms/func3/func3/trace/alert_func3.log"
+      },
+      "flags": [
+        "multiline"
+      ],
+      "offset": 12795542
+    },
+    "message": "Tue Jan 07 02:00:02 2020\nDM00 started with pid=324, OS id=21257, job SYS.SYS_EXPORT_FULL_01",
+    "input": {
+      "type": "log"
+    },
+    "ecs": {
+      "version": "1.1.0"
+    },
+    "host": {
+      "name": "func3",
+      "os": {
+        "family": "redhat",
+        "name": "Red",
+        "kernel": "2.6.32-279.el6.x86_64",
+        "codename": "Santiago",
+        "platform": "redhat",
+        "version": "6.3 (Santiago)"
+      },
+      "id": "768b36ba5c94a6dbc543df110000004c",
+      "containerized": false,
+      "hostname": "func3",
+      "architecture": "x86_64"
+    },
+    "agent": {
+      "type": "filebeat",
+      "ephemeral_id": "f7be0823-2fe9-407b-802e-b4af1365099e",
+      "hostname": "func3",
+      "id": "d710af2d-d20c-4f5c-961f-6cc610f7b819",
+      "version": "7.5.1"
+    },
+    "labels": {
+      "llll": "aaaa"
+    }
+  },
+  "fields": {
+    "suricata.eve.timestamp": [
+      "2020-01-07T09:40:50.081Z"
+    ],
+    "@timestamp": [
+      "2020-01-07T09:40:50.081Z"
+    ]
+  },
+  "sort": [
+    1578390050081
+  ]
+}

@@ -5,6 +5,16 @@ import sys
 import os
 import json
 import http.client as httpClient
+import socket
+
+
+oracle_name = os.environ.get("oracle_name")
+
+host_hostname = socket.gethostname()
+host_ip = socket.gethostbyname(host_hostname)
+
+__version__ = None
+exec(open("version.py").read())
 
 
 def parser_args(args):
@@ -81,8 +91,10 @@ def esDocTemplate(utcdt, message, file_path, oracle_version):
     document = {
         "@timestamp": utcdt,
         "message": message,
-        "log": {"flags": ["multiline"], "file": file_path},
-        "oracle": {"version": oracle_version}
+        "log": {"flags": ["multiline"], "file": {"path": file_path}},
+        "host": {"hostname": host_hostname, "ip": host_ip},
+        "oracle": {"version": oracle_version, "name": oracle_name},
+        "agent": {"version": __version__, "type": "filebeat-oracle"}
     }
     return json.dumps(document)
 
