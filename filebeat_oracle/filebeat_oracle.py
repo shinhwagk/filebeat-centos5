@@ -70,7 +70,7 @@ def logTSToDatetime(oracle_version, timestamp):
     _format = '%a %b %d %H:%M:%S %Y'
     if oracle_version in [9, 10]:
         _format = '%a %b %d %H:%M:%S CST %Y'
-    return datetime.strptime(timestamp, _format).astimezone(timezone.utc)
+    return datetime.strptime(timestamp, _format).astimezone()
 
 
 def logTSMapEsidx(esidx, d, fmt):
