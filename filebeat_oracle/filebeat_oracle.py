@@ -92,7 +92,7 @@ def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, fil
         esidx = logTSMapEsidx(elastic_prefix_index,
                               _logutcts, ELASTIC_INDEX_FORMAT)
         esDoc = esDocTemplate(_logutcts.isoformat(),
-                              r'\n'.join(log[1:]), file_path, oracle_version)
+                              r'\\n'.join(log[1:]), file_path, oracle_version)
         _ess(esidx, esDoc)
     return post
 
@@ -118,7 +118,7 @@ def main(args):
     _f = None
 
     try:
-        _f = open(ALERT_FILE_PATH, 'r')
+        _f = open(ALERT_FILE_PATH, mode='r')
         while True:
             line = _f.readline()
             if not line:
