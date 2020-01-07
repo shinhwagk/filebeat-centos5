@@ -43,7 +43,7 @@ jobs:
       - run: pip install wheel
       - run: python setup.py bdist_wheel
       - name: Publish package
-        if: github.event_name == 'push' && matrix.os == "ubuntu-latest"
+        if: github.event_name == 'push' && matrix.os == 'ubuntu-latest'
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: ${{ secrets.pypi_username }}
