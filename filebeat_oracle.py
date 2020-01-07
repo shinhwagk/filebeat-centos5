@@ -1,5 +1,5 @@
 import getopt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import re
 import sys
 import os
@@ -67,20 +67,16 @@ def logTSToDatetime(oracle_version, timestamp):
     _format = '%a %b %d %H:%M:%S %Y'
     if oracle_version in [9, 10]:
         _format = '%a %b %d %H:%M:%S CST %Y'
-    return datetime.strptime(timestamp, _format)
+    return datetime.strptime(timestamp, _format).astimezone(timezone.utc)
 
 
 def logTSMapEsidx(esidx, d, fmt):
     return "{}-{}".format(esidx, d.strftime(fmt))
 
 
-def esDocTSTemplate(logdt):
-    return (logdt + timedelta(hours=-8)).strftime("%Y%m%dT%H:%M:%S.000Z")
-
-
-def esDocTemplate(logdt, message, file_path, oracle_version):
+def esDocTemplate(utcdt, message, file_path, oracle_version):
     document = {
-        "@timestamp": esDocTSTemplate(logdt),
+        "@timestamp": utcdt,
         "message": message,
         "log": {"flags": ["multiline"], "file": file_path},
         "oracle": {"version": oracle_version}
@@ -92,10 +88,10 @@ def postes(elastic_host, elastic_port, elastic_prefix_index, oracle_version, fil
     _ess = ESServicePost(elastic_host, elastic_port)
 
     def post(log):
-        logts = logTSToDatetime(oracle_version, log[0])
+        _logutcts = logTSToDatetime(oracle_version, log[0])
         esidx = logTSMapEsidx(elastic_prefix_index,
-                              logts, ELASTIC_INDEX_FORMAT)
-        esDoc = esDocTemplate(logts,
+                              _logutcts, ELASTIC_INDEX_FORMAT)
+        esDoc = esDocTemplate(_logutcts.isoformat(),
                               r'\n'.join(log[1:]), file_path, oracle_version)
         _ess(esidx, esDoc)
     return post
