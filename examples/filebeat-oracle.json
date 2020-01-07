@@ -1,0 +1,24 @@
+{
+  "@timestamp": "2017-11-26T02:45:04+08:00",
+  "message": "Thread 1 advanced to log sequence 14642 (LGWR switch)\n  Current log# 4 seq# 14642 mem# 0: /u01/oradata/whpay/redo04.log",
+  "log": {
+    "flags": [
+      "multiline"
+    ],
+    "file": {
+      "path": "/workspace/test/10.log"
+    }
+  },
+  "host": {
+    "hostname": "f245f0c975be",
+    "ip": "172.19.0.3"
+  },
+  "oracle": {
+    "version": 10,
+    "name": "func1"
+  },
+  "agent": {
+    "version": "0.1.7",
+    "type": "filebeat-oracle"
+  }
+}
