@@ -18,8 +18,7 @@ class ParametrizedTestCase(unittest.TestCase):
 
 class TestOracleAlertLogToElastic(ParametrizedTestCase):
 
-    def setUp(self):
-        filebeat_oracle.ORACLE_VERSION =
+    # def setUp(self):
 
     def testlogTimestampToElasticTimestamp(self):
         year, mon, day, hour, minu, sec = filebeat_oracle.logTimestampToSingleDateNumbers(
