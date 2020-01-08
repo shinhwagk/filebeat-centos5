@@ -23,9 +23,10 @@ jobs:
           architecture: x64
       # - name: Test filebeat-oracle
       #   run: python filebeat_oracle_test.py
+      - run: python setup.py install
       - name: Post Test Log To Elasticsearch
         run: |
-          python filebeat_oracle.py --oracleName orcl \
+          python -m filebeat_oracle --oracleName orcl \
                                     --oracleVersion 10 \
                                     --oracleAlertFilePath ./test/10.log \
                                     --elasticHost "127.0.0.1" \
