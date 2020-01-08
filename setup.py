@@ -1,12 +1,11 @@
 from setuptools import setup, find_packages
+from filebeat_oracle import __version__
 
-__version__ = None
-exec(open("version.py").read())
 
 setup(
     name="filebeat-oracle",
     version=__version__,
-    py_modules=['filebeat_oracle', 'version'],
+    py_modules=['filebeat_oracle'],
     author='shinhwagk',
     author_email='shinhwagk@outlook.com',
     license="MIT"
