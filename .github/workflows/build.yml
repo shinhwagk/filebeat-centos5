@@ -28,7 +28,13 @@ jobs:
           python filebeat_oracle.py --oracleVersion 10 --alertFilePath "./test/10.log" --elasticHost 127.0.0.1 --elasticPort $esport --elasticIndex filebeat-oracle
         env:
           oracle_version: 10
+          elastic_host: "127.0.0.1"
+          elastic_index: "filebeat-oracle"
+          elastic_index_format: "%Y"
           elastic_port: ${{ job.services.elasticsearch.ports['9200'] }}
+          oracle_alert_file_path: ./test/10.log
+          oracle_alert_file_encode: "utf-8"
+          oracle_name: orcl
       - name: Test Elasticsearch Index Document Number
         run: |
           esport=${{ job.services.elasticsearch.ports['9200'] }}
