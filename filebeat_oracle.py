@@ -7,7 +7,7 @@ import json
 import http.client as httpClient
 import socket
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 oracle_name = None
 oracle_version = None
@@ -80,7 +80,8 @@ def logTSToDatetime(timestamp):
 def logTSMapEsidx(d):
     if elastic_index_format is None or elastic_index_format == "":
         return elastic_index
-    return "{}-{}".format(elastic_index, d.strftime(elastic_index_format))
+    fmt = d.strftime(elastic_index_format) if '%' in elastic_index_format else elastic_index_format
+    return "{}-{}".format(elastic_index, fmt)
 
 
 def esDocTemplate(utcdt, message):
