@@ -10,9 +10,9 @@ import socket
 oracle_name = None
 oracle_version = None
 oracle_alert_file_path = None
-oracle_alert_file_encode = None
+oracle_alert_file_encode = "utf-8"
 elastic_host = None
-elastic_port = None
+elastic_port = 9200
 elastic_index = "filebeat-oracle"
 elastic_index_format = None
 
@@ -28,8 +28,39 @@ __version__ = None
 exec(open("version.py").read())
 
 
+def parser_args_to_global_vars(args):
+    global oracle_name, oracle_version, oracle_alert_file_path, oracle_alert_file_encode, elastic_host, elastic_port, elastic_index, elastic_index_format
+
+    try:
+        opts, args = getopt.getopt(args,  "", ["help", "oracleName=", "oracleVersion=", "oracleAlertFilePath=", "oracleAlertFileEncode=", "elasticHost=",
+                                               "elasticPort=", "elasticIndex=", "elasticIndexFormat="])
+    except getopt.GetoptError:
+        # usage()
+        sys.exit(2)
+    for opt, value in opts:
+        if opt == '--oracleName':
+            oracle_name = value
+        elif opt == "--oracleVersion":
+            if value in ["10", "11", "12", "18", "19"]:
+                oracle_version = int(value)
+        elif opt == '--oracleAlertFilePath':
+            oracle_alert_file_path = value
+        elif opt == '--oracleAlertFileEncode':
+            oracle_alert_file_encode = value
+        elif opt == '--elasticHost':
+            elastic_host = value
+        elif opt == '--elasticPort':
+            elastic_port = value
+        elif opt == '--elasticIndex':
+            elastic_index = value
+        elif opt == '--elasticIndexFormat':
+            elastic_index_format = value
+
+    if None in [oracle_name, oracle_version, oracle_alert_file_path, elastic_host]:
+        sys.exit(2)
+
+
 def elasticRestApiClient(esidx, esdoc):
-    print(esidx)
     headers = {"Content-type": "application/json"}
     conn = httpClient.HTTPConnection(elastic_host, elastic_port)
     url_path = "/{}/_doc".format(esidx)
@@ -42,13 +73,13 @@ def elasticRestApiClient(esidx, esdoc):
 
 def logTSToDatetime(timestamp):
     _format = '%a %b %d %H:%M:%S %Y'
-    if oracle_version in [9, 10]:
+    if oracle_version in [10]:
         _format = '%a %b %d %H:%M:%S CST %Y'
     return datetime.strptime(timestamp, _format).astimezone()
 
 
 def logTSMapEsidx(d):
-    if elastic_index_format is None:
+    if elastic_index_format is None or elastic_index_format == "":
         return elastic_index
     return "{}-{}".format(elastic_index, d.strftime(elastic_index_format))
 
@@ -72,7 +103,10 @@ def filebeatOracleClient(log):
     elasticRestApiClient(esidx, esDoc)
 
 
-def boostrap():
+def main(argv):
+
+    parser_args_to_global_vars(argv)
+
     if oracle_version in [9, 10]:
         oracle_alert_file_timestamp_regex = oracle_alert_file_timestamp_regex_10_le
     else:
@@ -113,12 +147,4 @@ def boostrap():
 
 
 if __name__ == '__main__':
-    oracle_name = os.environ.get("oracle_name")
-    oracle_version = int(os.environ.get("oracle_version"))
-    oracle_alert_file_path = os.environ.get("oracle_alert_file_path")
-    oracle_alert_file_encode = os.environ.get("oracle_alert_file_encode")
-    elastic_host = os.environ.get("elastic_host")
-    elastic_port = int(os.environ.get("elastic_port"))
-    # elastic_index = os.environ.get("elastic_index")
-    elastic_index_format = os.environ.get("elastic_index_format")
-    boostrap()
+    main(sys.argv[1:])
