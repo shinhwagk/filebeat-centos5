@@ -29,7 +29,7 @@ jobs:
                                     --oracleVersion 10 \
                                     --oracleAlertFilePath ./test/10.log \
                                     --elasticHost "127.0.0.1" \
-                                    --elasticPort ${{ job.services.elasticsearch.ports['9200'] }}
+                                    --elasticPort ${{ job.services.elasticsearch.ports['9200'] }} \
                                     --elasticIndexFormat "%Y"
       - name: Test Elasticsearch Index Document Number
         run: |
