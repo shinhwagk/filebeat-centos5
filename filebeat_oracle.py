@@ -68,14 +68,16 @@ def esDocTemplate(utcdt, message):
 def filebeatOracleClient(log):
     _logutcts = logTSToDatetime(log[0])
     esidx = logTSMapEsidx(_logutcts)
-    esDoc = esDocTemplate(_logutcts.isoformat(),
-                          '\n'.join(log[1:]))
+    esDoc = esDocTemplate(_logutcts.isoformat(), '\n'.join(log[1:]))
     elasticRestApiClient(esidx, esDoc)
 
 
 def boostrap():
-    oracle_alert_file_timestamp_regex = oracle_alert_file_timestamp_regex_10_le if oracle_version in [
-        9, 10] else oracle_alert_file_timestamp_regex_10_gt
+    if oracle_version in [9, 10]:
+        oracle_alert_file_timestamp_regex = oracle_alert_file_timestamp_regex_10_le
+    else:
+        oracle_alert_file_timestamp_regex = oracle_alert_file_timestamp_regex_10_gt
+
     _process_lines = 0
     _valid_lines = 0
     _start = False
@@ -83,7 +85,7 @@ def boostrap():
     _f = None
 
     try:
-        _f = open(oracle_alert_file_path, mode='r',
+        _f = open(oracle_alert_file_path, 'r',
                   encoding=oracle_alert_file_encode)
         while True:
             line = _f.readline()
@@ -117,6 +119,6 @@ if __name__ == '__main__':
     oracle_alert_file_encode = os.environ.get("oracle_alert_file_encode")
     elastic_host = os.environ.get("elastic_host")
     elastic_port = int(os.environ.get("elastic_port"))
-    elastic_index = os.environ.get("elastic_index")
+    # elastic_index = os.environ.get("elastic_index")
     elastic_index_format = os.environ.get("elastic_index_format")
     boostrap()
