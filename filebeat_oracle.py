@@ -7,6 +7,8 @@ import json
 import http.client as httpClient
 import socket
 
+__version__ = "0.3.1"
+
 oracle_name = None
 oracle_version = None
 oracle_alert_file_path = None
@@ -23,9 +25,6 @@ host_ip = socket.gethostbyname(host_hostname)
 
 oracle_alert_file_timestamp_regex_10_gt = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
 oracle_alert_file_timestamp_regex_10_le = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\sCST\s[0-9]{4}$"
-
-__version__ = None
-exec(open("version.py").read())
 
 
 def parser_args_to_global_vars(args):
