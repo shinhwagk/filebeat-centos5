@@ -31,7 +31,7 @@ jobs:
           oracle_version: 10
           oracle_alert_file_path: ./test/10.log
           oracle_alert_file_encode: utf-8
-          elastic_host: elastic
+          elastic_host: 127.0.0.1
           elastic_port: ${{ job.services.elasticsearch.ports['9200'] }}
           elastic_index: filebeat-oracle
           elastic_index_format: "%Y"
