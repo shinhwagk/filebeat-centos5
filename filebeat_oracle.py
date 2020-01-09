@@ -68,7 +68,7 @@ def main():
 
     try:
         _f = open(oracle_alert_file_path, 'r',
-                  encoding=oracle_alert_file_encode)
+                  encoding=oracle_alert_file_encoding )
         while True:
             line = _f.readline()
             if not line:
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     oracle_name = os.environ.get('oracle_name')
     oracle_version = int(os.environ.get('oracle_version'))
     oracle_alert_file_path = os.environ.get('oracle_alert_file_path')
-    oracle_alert_file_encode = os.environ.get('oracle_alert_file_encode') or "utf-8"
+    oracle_alert_file_encoding = os.environ.get('oracle_alert_file_encoding') or "utf-8"
     elastic_host = os.environ.get('elastic_host')
     elastic_port = int(os.environ.get('elastic_port') or "9200")
     elastic_index = os.environ.get('elastic_index') or "filebeat-oracle"

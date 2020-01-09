@@ -28,7 +28,7 @@ services:
     volumes:
       - ..:/workspace
       - vscode-extensions:/root/.vscode-server/extensions
-      - pip-cache:/usr/local/lib/python3.8/site-packages
+      # - pip-cache:/usr/local/lib/python3.8/site-packages
     command: sleep infinity
     links:
       - elastic
