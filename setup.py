@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+
 from filebeat_oracle import __version__
 
 

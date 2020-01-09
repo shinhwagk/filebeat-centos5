@@ -8,28 +8,7 @@ import http.client as httpClient
 import socket
 
 
-__version__ = "0.5.0"
-
-
-oracle_name = os.environ.get('oracle_name')
-oracle_version = int(os.environ.get('oracle_version'))
-oracle_alert_file_path = os.environ.get('oracle_alert_file_path')
-oracle_alert_file_encode = os.environ.get('oracle_alert_file_encode') or "utf-8"
-elastic_host = os.environ.get('elastic_host')
-elastic_port = int(os.environ.get('elastic_port') or "9200")
-elastic_index = os.environ.get('elastic_index') or "filebeat-oracle"
-elastic_index_format = os.environ.get('elastic_index_format')
-
-
-for env in ['oracle_name', 'oracle_version', 'oracle_alert_file_path', 'elastic_host', 'elastic_index_format']:
-    if os.environ.get(env) is None:
-        print("env {} is Nnone.".format(env))
-        sys.exit(1)
-
-
-oracle_alert_file_timestamp_regex = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
-if oracle_version in [9, 10]:
-    oracle_alert_file_timestamp_regex = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\sCST\s[0-9]{4}$"
+__version__ = "0.3.2"
 
 
 host_hostname = socket.gethostname()
@@ -116,4 +95,21 @@ def main():
 
 
 if __name__ == '__main__':
+    oracle_name = os.environ.get('oracle_name')
+    oracle_version = int(os.environ.get('oracle_version'))
+    oracle_alert_file_path = os.environ.get('oracle_alert_file_path')
+    oracle_alert_file_encode = os.environ.get('oracle_alert_file_encode') or "utf-8"
+    elastic_host = os.environ.get('elastic_host')
+    elastic_port = int(os.environ.get('elastic_port') or "9200")
+    elastic_index = os.environ.get('elastic_index') or "filebeat-oracle"
+    elastic_index_format = os.environ.get('elastic_index_format')
+
+    for env in ['oracle_name', 'oracle_version', 'oracle_alert_file_path', 'elastic_host', 'elastic_index_format']:
+        if os.environ.get(env) is None:
+            print("env {} is Nnone.".format(env))
+            sys.exit(1)
+
+    oracle_alert_file_timestamp_regex = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\s[0-9]{4}$"
+    if oracle_version in [9, 10]:
+        oracle_alert_file_timestamp_regex = r"^[A-Za-z]{3}\s[A-Za-z]{3}\s[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\sCST\s[0-9]{4}$"
     main()
