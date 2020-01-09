@@ -25,13 +25,16 @@ jobs:
       #   run: python filebeat_oracle_test.py
       - run: python setup.py install
       - name: Post Test Log To Elasticsearch
-        run: |
-          python -m filebeat_oracle --oracleName orcl \
-                                    --oracleVersion 10 \
-                                    --oracleAlertFilePath ./test/10.log \
-                                    --elasticHost "127.0.0.1" \
-                                    --elasticPort ${{ job.services.elasticsearch.ports['9200'] }} \
-                                    --elasticIndexFormat "%Y"
+        run: python -m filebeat_oracle
+        env:
+          oracle_name: orcl
+          oracle_version: 10
+          oracle_alert_file_path: ./test/10.log
+          oracle_alert_file_encode: utf-8
+          elastic_host: elastic
+          elastic_port: ${{ job.services.elasticsearch.ports['9200'] }}
+          elastic_index: filebeat-oracle
+          elastic_index_format: "%Y"
       - name: Test Elasticsearch Index Document Number
         run: |
           esport=${{ job.services.elasticsearch.ports['9200'] }}
