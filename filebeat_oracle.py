@@ -8,7 +8,7 @@ import http.client as httpClient
 import socket
 
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 
 host_hostname = socket.gethostname()
@@ -68,7 +68,7 @@ def main():
 
     try:
         _f = open(oracle_alert_file_path, 'r',
-                  encoding=oracle_alert_file_encoding )
+                  encoding=oracle_alert_file_encoding)
         while True:
             line = _f.readline()
             if not line:
