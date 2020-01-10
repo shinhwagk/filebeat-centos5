@@ -8,22 +8,30 @@ import http.client as httpClient
 import socket
 
 
-__version__ = "0.5.1"
+__version__ = "0.6.0"
 
 
 host_hostname = socket.gethostname()
 host_ip = socket.gethostbyname(host_hostname)
 
 
-def elasticRestApiClient(esidx, esdoc):
+def elasticBulkApiClient():
+    documents = []
     headers = {"Content-type": "application/json"}
-    conn = httpClient.HTTPConnection(elastic_host, elastic_port)
-    url_path = "/{}/_doc".format(esidx)
-    conn.request("POST", url_path, esdoc, headers)
-    response = conn.getresponse()
-    if response.status != 201:
-        print(response.read())
-    conn.close()
+
+    def post(esidx, esdoc, launch: bool):
+        indexinfo = {"index": {"_index": esidx}}
+        documents.append(json.dumps(indexinfo))
+        documents.append(json.dumps(esdoc))
+        if len(documents) >= 100 or launch:
+            documents.append('')  # The bulk request must be terminated by a newline [\\\\n]
+            conn = httpClient.HTTPConnection(elastic_host, elastic_port)
+            conn.request("POST", "/_bulk", '\n'.join(documents), headers)
+            response = conn.getresponse()
+            if response.status != 200:
+                print(response.read())
+            conn.close()
+    return post
 
 
 def logTSToDatetime(timestamp):
@@ -41,7 +49,7 @@ def logTSMapEsidx(d):
 
 
 def esDocTemplate(utcdt, message):
-    document = {
+    return {
         "@timestamp": utcdt,
         "message": message,
         "log": {"flags": ["multiline"], "file": {"path": oracle_alert_file_path}},
@@ -49,14 +57,13 @@ def esDocTemplate(utcdt, message):
         "oracle": {"version": oracle_version, "name": oracle_name},
         "agent": {"version": __version__, "type": "filebeat-oracle"}
     }
-    return json.dumps(document)
 
 
-def filebeatOracleClient(log):
+def filebeatOracleClient(log, esClient, launch=False):
     _logutcts = logTSToDatetime(log[0])
     esidx = logTSMapEsidx(_logutcts)
     esDoc = esDocTemplate(_logutcts.isoformat(), '\n'.join(log[1:]))
-    elasticRestApiClient(esidx, esDoc)
+    esClient(esidx, esDoc, launch)
 
 
 def main():
@@ -66,14 +73,15 @@ def main():
     _log_container = []
     _f = None
 
+    _esClient = elasticBulkApiClient()
+
     try:
-        _f = open(oracle_alert_file_path, 'r',
-                  encoding=oracle_alert_file_encoding)
+        _f = open(oracle_alert_file_path, 'r', encoding=oracle_alert_file_encoding)
         while True:
             line = _f.readline()
             if not line:
                 if len(_log_container) >= 1:
-                    filebeatOracleClient(_log_container)
+                    filebeatOracleClient(_log_container, _esClient, True)
                     _valid_lines = _process_lines
                 break
             _process_lines += 1
@@ -83,7 +91,7 @@ def main():
                 _start = True
             if match and _start:
                 if len(_log_container) >= 1:
-                    filebeatOracleClient(_log_container)
+                    filebeatOracleClient(_log_container, _esClient, False)
                     _valid_lines = _process_lines - 1
                 _log_container = []
             if _start:
