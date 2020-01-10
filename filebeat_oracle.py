@@ -8,7 +8,7 @@ import http.client as httpClient
 import socket
 
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 
 host_hostname = socket.gethostname()
@@ -29,7 +29,7 @@ def elasticBulkApiClient():
             conn.request("POST", "/_bulk", '\n'.join(documents), headers)
             response = conn.getresponse()
             if response.status != 200:
-                print(response.read())
+                print(response.read(), file=sys.stderr)
             conn.close()
     return post
 
@@ -67,38 +67,29 @@ def filebeatOracleClient(log, esClient, launch=False):
 
 
 def main():
-    _process_lines = 0
     _valid_lines = 0
     _start = False
     _log_container = []
-    _f = None
-
     _esClient = elasticBulkApiClient()
 
     try:
-        _f = open(oracle_alert_file_path, 'r', encoding=oracle_alert_file_encoding)
-        while True:
-            line = _f.readline()
-            if not line:
-                if len(_log_container) >= 1:
-                    filebeatOracleClient(_log_container, _esClient, True)
-                    _valid_lines = _process_lines
-                break
-            _process_lines += 1
-            line = line.strip('\n')
-            match = re.match(oracle_alert_file_timestamp_regex, line)
-            if match:
-                _start = True
-            if match and _start:
-                if len(_log_container) >= 1:
-                    filebeatOracleClient(_log_container, _esClient, False)
-                    _valid_lines = _process_lines - 1
-                _log_container = []
-            if _start:
-                _log_container.append(line)
+        with open(oracle_alert_file_path, 'r', encoding=oracle_alert_file_encoding) as _f:
+            for f_idx, f_line in enumerate(_f):
+                log = f_line.strip('\n')
+                match = re.match(oracle_alert_file_timestamp_regex, log)
+                if match:
+                    _start = True
+                if match and _start:
+                    if len(_log_container) >= 1:
+                        filebeatOracleClient(_log_container, _esClient, False)
+                        _valid_lines = f_idx
+                    _log_container = []
+                if _start:
+                    _log_container.append(log)
+        if len(_log_container) >= 1:
+            filebeatOracleClient(_log_container, _esClient, True)
+            _valid_lines = f_idx + 1
     finally:
-        if _f is not None:
-            _f.close()
         print(_valid_lines)
 
 
