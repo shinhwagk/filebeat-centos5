@@ -8,7 +8,7 @@ import http.client as httpClient
 import socket
 
 
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 
 
 host_hostname = socket.gethostname()
@@ -97,10 +97,10 @@ if __name__ == '__main__':
     oracle_name = os.environ.get('oracle_name')
     oracle_version = int(os.environ.get('oracle_version'))
     oracle_alert_file_path = os.environ.get('oracle_alert_file_path')
-    oracle_alert_file_encoding = os.environ.get('oracle_alert_file_encoding') or "utf-8"
+    oracle_alert_file_encoding = os.environ.get('oracle_alert_file_encoding', 'utf-8')
     elastic_host = os.environ.get('elastic_host')
-    elastic_port = int(os.environ.get('elastic_port') or "9200")
-    elastic_index = os.environ.get('elastic_index') or "filebeat-oracle"
+    elastic_port = int(os.environ.get('elastic_port', '9200'))
+    elastic_index = os.environ.get('elastic_index', 'filebeat-oracle')
     elastic_index_format = os.environ.get('elastic_index_format')
 
     for env in ['oracle_name', 'oracle_version', 'oracle_alert_file_path', 'elastic_host', 'elastic_index_format']:
