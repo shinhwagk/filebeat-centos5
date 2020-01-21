@@ -1,22 +1,33 @@
 version: "3"
 
 services:
-  elastic:
-    image: elasticsearch:7.5.1
-    environment:
-      - discovery.type=single-node
-      - TZ=Asia/Shanghai
+  # elastic:
+  #   image: elasticsearch:7.5.1
+  #   environment:
+  #     - discovery.type=single-node
+  #     - TZ=Asia/Shanghai
+  #   ports:
+  #     - "9200:9200"
+  # kibana:
+  #   image: kibana:7.5.1
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elastic:9200
+  #     - TZ=Asia/Shanghai
+  #   ports:
+  #     - "5601:5601"
+  #   links:
+  #     - elastic
+  loki:
+    image: grafana/loki:latest
     ports:
-      - "9200:9200"
-  kibana:
-    image: kibana:7.5.1
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elastic:9200
-      - TZ=Asia/Shanghai
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+  grafana:
+    image: grafana/grafana:master
     ports:
-      - "5601:5601"
+      - "3000:3000"
     links:
-      - elastic
+      - loki
   app:
     build:
       context: .
@@ -28,13 +39,11 @@ services:
     volumes:
       - ..:/workspace
       - vscode-extensions:/root/.vscode-server/extensions
-      # - pip-cache:/usr/local/lib/python3.8/site-packages
     command: sleep infinity
     links:
-      - elastic
+      # - elastic
+      - loki
 
 volumes:
   vscode-extensions:
-    external: true
-  pip-cache:
     external: true

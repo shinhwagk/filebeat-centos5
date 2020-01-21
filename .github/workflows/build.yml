@@ -8,13 +8,11 @@ jobs:
       matrix:
         python-version: ['3.x']
     services:
-      elasticsearch:
-        image: elasticsearch:7.5.1
-        env:
-          discovery.type: single-node
+      loki:
+        image: grafana/loki
         ports:
-        - 9200
-        options: --health-cmd="curl http://127.0.0.1:9200" --health-interval=10s --health-timeout=5s --health-retries=3
+        - 3100
+        options: --health-cmd="curl http://127.0.0.1:3100" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
@@ -24,29 +22,30 @@ jobs:
       # - name: Test filebeat-oracle
       #   run: python filebeat_oracle_test.py
       - run: python setup.py install
-      - name: Post Test Log To Elasticsearch
-        run: python -m filebeat_oracle
+      - name: Post Test Log To loki
+        run: python -m loki_oracle
         env:
-          oracle_name: orcl
+          oracle_group: test
+          oracle_role: p
+          oracle_uname: orcl
+          oracle_inst: 1
           oracle_version: 10
           oracle_alert_file_path: ./test/10.log
           oracle_alert_file_encode: utf-8
-          elastic_host: 127.0.0.1
-          elastic_port: ${{ job.services.elasticsearch.ports['9200'] }}
-          elastic_index: filebeat-oracle
-          elastic_index_format: "%Y"
-      - name: Test Elasticsearch Index Document Number
-        run: |
-          esport=${{ job.services.elasticsearch.ports['9200'] }}
-          for i in `seq 1 60`
-          do
-            cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${esport}/_sql?format=txt -d '{"query": "select count(*) from \"filebeat-oracle-*\" WHERE \"oracle.version\" = 10 "}' | tail -n 1)
-            cnt=$(echo -e "${cnt}" | tr -d '[:space:]')
-            [[ "${cnt}" == "10" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
-            echo "document count: ${cnt}. retry: ${i}."
-            sleep 1
-          done
-          exit 1
+          loki_host: 127.0.0.1
+          loki_port: ${{ job.services.loki.ports['3100'] }}
+      # - name: Test loki Index Document Number
+      #   run: |
+      #     esport=${{ job.services.loki.ports['9200'] }}
+      #     for i in `seq 1 60`
+      #     do
+      #       cnt=$(curl -s -XPOST -H"Content-Type: application/json" http://127.0.0.1:${esport}/_sql?format=txt -d '{"query": "select count(*) from \"filebeat-oracle-*\" WHERE \"oracle.version\" = 10 "}' | tail -n 1)
+      #       cnt=$(echo -e "${cnt}" | tr -d '[:space:]')
+      #       [[ "${cnt}" == "10" ]] && echo "document count: ${cnt}. Test Document Number Success." && exit 0
+      #       echo "document count: ${cnt}. retry: ${i}."
+      #       sleep 1
+      #     done
+      #     exit 1
       - run: pip install wheel
       - run: python setup.py bdist_wheel
       - name: Publish package
