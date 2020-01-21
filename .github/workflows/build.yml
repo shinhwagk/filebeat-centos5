@@ -10,6 +10,7 @@ jobs:
     services:
       loki:
         image: grafana/loki
+        command: -config.file=/etc/loki/local-config.yaml
         ports:
         - 3100
         options: --health-cmd="curl http://localhost:3100/ready" --health-interval=10s --health-timeout=5s --health-retries=10
