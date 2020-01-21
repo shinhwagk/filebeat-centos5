@@ -25,13 +25,13 @@ jobs:
       - name: Post Test Log To loki
         run: python -m loki_oracle
         env:
-          oracle_group: test
-          oracle_role: p
-          oracle_uname: orcl
-          oracle_inst: 1
-          oracle_version: "10"
-          oracle_alert_file_path: ./test/10.log
-          oracle_alert_file_encode: utf-8
+          db_group: test
+          db_role: p
+          db_uname: orcl
+          db_inst: 1
+          db_version: 10
+          db_alert_file_path: ./test/10.log
+          db_alert_file_encode: utf-8
           loki_host: 127.0.0.1
           loki_port: ${{ job.services.loki.ports['3100'] }}
       # - name: Test loki Index Document Number
