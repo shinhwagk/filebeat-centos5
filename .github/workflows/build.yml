@@ -14,7 +14,7 @@ jobs:
         - 3100
     #    options: --health-cmd="curl http://localhost:3100/ready" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
-      - run: curl -iv http://localhost:3100/ready
+      - run: curl -iv http://localhost:${{ job.services.loki.ports['3100'] }}/ready
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
